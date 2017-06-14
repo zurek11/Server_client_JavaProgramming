@@ -1,0 +1,220 @@
+<html>
+<head>
+<title>CLIENT.java</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.ln { color: #606366; font-weight: normal; font-style: normal; }
+.s0 { color: rgb(204,120,50); }
+.s1 { color: rgb(169,183,198); }
+.s2 { color: rgb(104,151,187); }
+.s3 { color: rgb(128,128,128); }
+.s4 { color: rgb(106,135,89); }
+.s5 { color: rgb(98,151,85); font-style: italic; }
+</style>
+</head>
+<BODY BGCOLOR="#2b2b2b">
+<TABLE CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<TR><TD><CENTER>
+<FONT FACE="Arial, Helvetica" COLOR="#000000">
+CLIENT.java</FONT>
+</center></TD></TR></TABLE>
+<pre>
+<span class="s0">package </span><span class="s1">CLIENT</span><span class="s0">;</span><span class="s1"> 
+ 
+</span><span class="s0">import </span><span class="s1">MainMenu.MainMenu</span><span class="s0">;</span><span class="s1"> 
+</span><span class="s0">import </span><span class="s1">java.awt.event.ActionEvent</span><span class="s0">;</span><span class="s1"> 
+</span><span class="s0">import </span><span class="s1">java.awt.event.ActionListener</span><span class="s0">;</span><span class="s1"> 
+</span><span class="s0">import </span><span class="s1">java.io.*</span><span class="s0">;</span><span class="s1"> 
+</span><span class="s0">import </span><span class="s1">java.net.*</span><span class="s0">;</span><span class="s1"> 
+</span><span class="s0">import </span><span class="s1">java.nio.ByteBuffer</span><span class="s0">;</span><span class="s1"> 
+</span><span class="s0">import </span><span class="s1">java.util.ArrayList</span><span class="s0">;</span><span class="s1"> 
+</span><span class="s0">import </span><span class="s1">java.util.Arrays</span><span class="s0">;</span><span class="s1"> 
+</span><span class="s0">import </span><span class="s1">java.util.Objects</span><span class="s0">;</span><span class="s1"> 
+ 
+</span><span class="s0">import static </span><span class="s1">java.lang.Thread.State.TERMINATED</span><span class="s0">;</span><span class="s1"> 
+ 
+</span><span class="s0">public class </span><span class="s1">CLIENT{ 
+ 
+    </span><span class="s0">private </span><span class="s1">Thread thread</span><span class="s0">;</span><span class="s1"> 
+    </span><span class="s0">private </span><span class="s1">CLIENTView clientView</span><span class="s0">;</span><span class="s1"> 
+    </span><span class="s0">private </span><span class="s1">String serverIP</span><span class="s0">;</span><span class="s1"> 
+    </span><span class="s0">private </span><span class="s1">String port</span><span class="s0">;</span><span class="s1"> 
+    </span><span class="s0">private </span><span class="s1">String length</span><span class="s0">;</span><span class="s1"> 
+    </span><span class="s0">private </span><span class="s1">DatagramSocket clientSocket</span><span class="s0">;</span><span class="s1"> 
+    </span><span class="s0">private int </span><span class="s1">numbOfMessage = </span><span class="s2">0</span><span class="s0">;    </span><span class="s3">//premenna uchovavajuca poradove cislo posielanej spravy</span><span class="s1"> 
+ 
+    </span><span class="s0">public </span><span class="s1">CLIENT() { 
+        System.out.println(</span><span class="s4">&quot;Starting Client...&quot;</span><span class="s1">)</span><span class="s0">;</span><span class="s1"> 
+        clientView=</span><span class="s0">new </span><span class="s1">CLIENTView()</span><span class="s0">;</span><span class="s1"> 
+        init()</span><span class="s0">;</span><span class="s1"> 
+    } 
+ 
+    </span><span class="s3">//----METHODS-------------------------------------------------------------------------------------------------------</span><span class="s1"> 
+ 
+    </span><span class="s0">private void </span><span class="s1">init(){ 
+        clientSocket=</span><span class="s0">null;</span><span class="s1"> 
+        clientView.getButBack().addActionListener(backListener)</span><span class="s0">;</span><span class="s1"> 
+        clientView.getButSend().addActionListener(sendListener)</span><span class="s0">;</span><span class="s1"> 
+        clientView.getButPing().addActionListener(pingListener)</span><span class="s0">;</span><span class="s1"> 
+    } 
+ 
+    </span><span class="s5">/** 
+     * Listener to Send button 
+     */</span><span class="s1"> 
+    </span><span class="s0">private </span><span class="s1">ActionListener sendListener = </span><span class="s0">new </span><span class="s1">ActionListener(){ 
+        @Override 
+        </span><span class="s0">public void </span><span class="s1">actionPerformed(ActionEvent e) { 
+            </span><span class="s3">//-------------------------------------------------------------</span><span class="s1"> 
+            </span><span class="s0">boolean </span><span class="s1">alive=</span><span class="s0">false;</span><span class="s1"> 
+ 
+            </span><span class="s0">if</span><span class="s1">(thread!=</span><span class="s0">null</span><span class="s1">) { 
+                </span><span class="s0">if </span><span class="s1">(thread.isAlive()) { 
+                    alive = </span><span class="s0">true;</span><span class="s1"> 
+                    </span><span class="s3">//noinspection deprecation</span><span class="s1"> 
+                    thread.stop()</span><span class="s0">;</span><span class="s1"> 
+                    clientView.getArea().append(</span><span class="s4">&quot;CLIENT: Stopping pinging...</span><span class="s0">\n</span><span class="s4">&quot;</span><span class="s1">)</span><span class="s0">;</span><span class="s1"> 
+                } 
+            } 
+ 
+            </span><span class="s3">//-------------------------------------------------------------</span><span class="s1"> 
+ 
+            clientView.getArea().append(</span><span class="s4">&quot;CLIENT: Start sending message...</span><span class="s0">\n</span><span class="s4">&quot;</span><span class="s1">)</span><span class="s0">;</span><span class="s1"> 
+            ++numbOfMessage</span><span class="s0">;</span><span class="s1"> 
+ 
+            port=clientView.getTexField()[</span><span class="s2">0</span><span class="s1">].getText()</span><span class="s0">;</span><span class="s1"> 
+            serverIP=clientView.getTexField()[</span><span class="s2">1</span><span class="s1">].getText()</span><span class="s0">;</span><span class="s1"> 
+            length=clientView.getTexField()[</span><span class="s2">2</span><span class="s1">].getText()</span><span class="s0">;</span><span class="s1"> 
+ 
+            </span><span class="s0">if</span><span class="s1">(!Objects.equals(serverIP</span><span class="s0">, </span><span class="s4">&quot;&quot;</span><span class="s1">) &amp;&amp; !Objects.equals(port</span><span class="s0">, </span><span class="s4">&quot;&quot;</span><span class="s1">) &amp;&amp; !Objects.equals(length</span><span class="s0">, </span><span class="s4">&quot;&quot;</span><span class="s1">)){ 
+                sendingPaket()</span><span class="s0">;</span><span class="s1"> 
+            } 
+            </span><span class="s0">else</span><span class="s1">{ 
+                clientView.getArea().append(</span><span class="s4">&quot;CLIENT: Unkown port or IP adress or length of packet</span><span class="s0">\n</span><span class="s4">&quot;</span><span class="s1">)</span><span class="s0">;</span><span class="s1"> 
+                clientView.getArea().append(</span><span class="s4">&quot;CLIENT: Stopping to send message...</span><span class="s0">\n</span><span class="s4">&quot;</span><span class="s1">)</span><span class="s0">;</span><span class="s1"> 
+            } 
+            </span><span class="s3">//------------------------------------------------------------</span><span class="s1"> 
+            </span><span class="s0">if</span><span class="s1">(alive){ 
+                clientView.getArea().append(</span><span class="s4">&quot;CLIENT: Start to ping...</span><span class="s0">\n</span><span class="s4">&quot;</span><span class="s1">)</span><span class="s0">;</span><span class="s1"> 
+                thread=</span><span class="s0">new </span><span class="s1">Thread(</span><span class="s0">new </span><span class="s1">CLIENTPing(clientView))</span><span class="s0">;</span><span class="s1"> 
+                thread.start()</span><span class="s0">;</span><span class="s1"> 
+            } 
+            </span><span class="s3">//-----------------------------------------------------------</span><span class="s1"> 
+        } 
+    }</span><span class="s0">;</span><span class="s1"> 
+ 
+    </span><span class="s0">private </span><span class="s1">ActionListener pingListener = </span><span class="s0">new </span><span class="s1">ActionListener() { 
+        @Override 
+        </span><span class="s0">public void </span><span class="s1">actionPerformed(ActionEvent e) { 
+            </span><span class="s0">if </span><span class="s1">(thread == </span><span class="s0">null </span><span class="s1">|| thread.getState().equals(TERMINATED)) { 
+                clientView.getArea().append(</span><span class="s4">&quot;CLIENT: Start to ping...</span><span class="s0">\n</span><span class="s4">&quot;</span><span class="s1">)</span><span class="s0">;</span><span class="s1"> 
+                thread = </span><span class="s0">new </span><span class="s1">Thread(</span><span class="s0">new </span><span class="s1">CLIENTPing(clientView))</span><span class="s0">;</span><span class="s1"> 
+                thread.start()</span><span class="s0">;</span><span class="s1"> 
+            } 
+            </span><span class="s0">else</span><span class="s1">{ 
+                clientView.getArea().append(</span><span class="s4">&quot;CLIENT: Stopping pinging...</span><span class="s0">\n</span><span class="s4">&quot;</span><span class="s1">)</span><span class="s0">;</span><span class="s1"> 
+                </span><span class="s3">//noinspection deprecation</span><span class="s1"> 
+                thread.stop()</span><span class="s0">;</span><span class="s1"> 
+            } 
+        } 
+    }</span><span class="s0">;</span><span class="s1"> 
+ 
+    </span><span class="s5">/** 
+     * Listener to Back button 
+     */</span><span class="s1"> 
+    </span><span class="s0">private </span><span class="s1">ActionListener backListener = </span><span class="s0">new </span><span class="s1">ActionListener(){ 
+        @Override 
+        </span><span class="s0">public void </span><span class="s1">actionPerformed(ActionEvent e) { 
+            </span><span class="s0">if</span><span class="s1">(thread!=</span><span class="s0">null</span><span class="s1">){ 
+                </span><span class="s0">if</span><span class="s1">(thread.isAlive())</span><span class="s3">//noinspection deprecation</span><span class="s1"> 
+                    thread.stop()</span><span class="s0">;</span><span class="s1"> 
+            } 
+            clientView.dispose()</span><span class="s0">;</span><span class="s1"> 
+            </span><span class="s0">new </span><span class="s1">MainMenu()</span><span class="s0">;</span><span class="s1"> 
+            System.out.println(</span><span class="s4">&quot;Stopping thread...&quot;</span><span class="s1">)</span><span class="s0">;</span><span class="s1"> 
+        } 
+    }</span><span class="s0">;</span><span class="s1"> 
+ 
+    </span><span class="s0">private void </span><span class="s1">sendingPaket(){ 
+        ArrayList&lt;</span><span class="s0">byte</span><span class="s1">[]&gt; subByteToSend</span><span class="s0">;        </span><span class="s3">//array podstringov posielanej spravy</span><span class="s1"> 
+ 
+        </span><span class="s0">try </span><span class="s1">{clientSocket = </span><span class="s0">new </span><span class="s1">DatagramSocket()</span><span class="s0">;</span><span class="s1">}   </span><span class="s3">//vytvaranie socketu</span><span class="s1"> 
+        </span><span class="s0">catch </span><span class="s1">(SocketException e1) {System.out.println(</span><span class="s4">&quot;Error: Can't create new DatagramSocket.&quot;</span><span class="s1">)</span><span class="s0">;</span><span class="s1">} 
+ 
+        InetAddress IPAddress = </span><span class="s0">null;</span><span class="s1"> 
+        </span><span class="s0">try </span><span class="s1">{ 
+            IPAddress = InetAddress.getByName(serverIP)</span><span class="s0">;</span><span class="s1"> 
+        } </span><span class="s0">catch </span><span class="s1">(UnknownHostException e1) { 
+            e1.printStackTrace()</span><span class="s0">;</span><span class="s1"> 
+        } 
+ 
+        </span><span class="s0">int </span><span class="s1">maxLengthOfPacket = Integer.parseInt(length)</span><span class="s0">;  </span><span class="s3">//priradenie maximalnej dlzky fragmetu</span><span class="s1"> 
+ 
+        </span><span class="s0">byte</span><span class="s1">[] byteToSend = clientView.getTexField()[</span><span class="s2">3</span><span class="s1">].getText().getBytes()</span><span class="s0">;             </span><span class="s3">//priradenie spravy na poslanie</span><span class="s1"> 
+        subByteToSend=SplittedByte(byteToSend</span><span class="s0">,</span><span class="s1">maxLengthOfPacket)</span><span class="s0">;</span><span class="s1"> 
+ 
+        </span><span class="s0">byte</span><span class="s1">[] maxNumbOfPaket = ByteBuffer.allocate(</span><span class="s2">4</span><span class="s1">).putInt(subByteToSend.size()).array()</span><span class="s0">;    </span><span class="s3">//pole bytov uchovavajuce pocet posielanych paketov</span><span class="s1"> 
+ 
+        </span><span class="s0">byte</span><span class="s1">[] idOfMessage = ByteBuffer.allocate(</span><span class="s2">4</span><span class="s1">).putInt(numbOfMessage).array()</span><span class="s0">;              </span><span class="s3">//pole bytov uchovavajuce poradie posielanej spravy</span><span class="s1"> 
+ 
+        </span><span class="s0">for </span><span class="s1">(</span><span class="s0">int </span><span class="s1">i = </span><span class="s2">0</span><span class="s0">; </span><span class="s1">i &lt; subByteToSend.size()</span><span class="s0">; </span><span class="s1">++i) { 
+            </span><span class="s0">byte</span><span class="s1">[] numbOfPaket = ByteBuffer.allocate(</span><span class="s2">4</span><span class="s1">).putInt(i + </span><span class="s2">1</span><span class="s1">).array()</span><span class="s0">;  </span><span class="s3">//pole bytov uchovavajuce poradie aktualne posielaneho paketu</span><span class="s1"> 
+            </span><span class="s0">byte</span><span class="s1">[] paketToSend = </span><span class="s0">new byte</span><span class="s1">[idOfMessage.length + numbOfPaket.length + maxNumbOfPaket.length + subByteToSend.get(i).length]</span><span class="s0">;    </span><span class="s3">//vytvorenie pola bytov ktoremu pridame hlavicku</span><span class="s1"> 
+            System.arraycopy(idOfMessage</span><span class="s0">, </span><span class="s2">0</span><span class="s0">, </span><span class="s1">paketToSend</span><span class="s0">, </span><span class="s2">0</span><span class="s0">, </span><span class="s1">idOfMessage.length)</span><span class="s0">;       </span><span class="s3">//polu bytov pridame cast hlavicky s ID spravy</span><span class="s1"> 
+            System.arraycopy(numbOfPaket</span><span class="s0">, </span><span class="s2">0</span><span class="s0">, </span><span class="s1">paketToSend</span><span class="s0">, </span><span class="s1">idOfMessage.length</span><span class="s0">, </span><span class="s1">numbOfPaket.length)</span><span class="s0">;  </span><span class="s3">//polu bytov pridame cast hlavicky s poradim posielaneho paketu</span><span class="s1"> 
+            System.arraycopy(maxNumbOfPaket</span><span class="s0">, </span><span class="s2">0</span><span class="s0">, </span><span class="s1">paketToSend</span><span class="s0">, </span><span class="s1">idOfMessage.length + numbOfPaket.length</span><span class="s0">, </span><span class="s1">maxNumbOfPaket.length)</span><span class="s0">; </span><span class="s3">//polu bytov pridame cast hlavicky s poctom posielanych paketov</span><span class="s1"> 
+            System.arraycopy(subByteToSend.get(i)</span><span class="s0">, </span><span class="s2">0</span><span class="s0">, </span><span class="s1">paketToSend</span><span class="s0">, </span><span class="s1">idOfMessage.length + numbOfPaket.length + maxNumbOfPaket.length</span><span class="s0">, </span><span class="s1">subByteToSend.get(i).length)</span><span class="s0">; </span><span class="s3">//polu bytov pridame samotne data</span><span class="s1"> 
+            subByteToSend.set(i</span><span class="s0">, </span><span class="s1">paketToSend)</span><span class="s0">;  </span><span class="s3">//do arraylistu pridame modifikovany paket s hlavickou</span><span class="s1"> 
+        } 
+        </span><span class="s0">for </span><span class="s1">(</span><span class="s0">byte</span><span class="s1">[] aSubByteToSend : subByteToSend) { 
+            DatagramPacket sendPacket = </span><span class="s0">new </span><span class="s1">DatagramPacket(aSubByteToSend</span><span class="s0">, </span><span class="s1">aSubByteToSend.length</span><span class="s0">, </span><span class="s1">IPAddress</span><span class="s0">, </span><span class="s1">Integer.parseInt(clientView.getTexField()[</span><span class="s2">0</span><span class="s1">].getText()))</span><span class="s0">;</span><span class="s1"> 
+            </span><span class="s0">try </span><span class="s1">{ 
+                </span><span class="s0">assert </span><span class="s1">clientSocket != </span><span class="s0">null;</span><span class="s1"> 
+                clientSocket.send(sendPacket)</span><span class="s0">;</span><span class="s1"> 
+                clientSocket.setSoTimeout(</span><span class="s2">2000</span><span class="s1">)</span><span class="s0">;</span><span class="s1"> 
+            } 
+            </span><span class="s0">catch </span><span class="s1">(SocketTimeoutException e){ 
+                clientView.getArea().append(</span><span class="s4">&quot;CLIENT: Unknown server.</span><span class="s0">\n</span><span class="s4">&quot;</span><span class="s1">)</span><span class="s0">;</span><span class="s1"> 
+                clientView.getArea().append(</span><span class="s4">&quot;CLIENT: Stopping sending a message...</span><span class="s0">\n</span><span class="s4">&quot;</span><span class="s1">)</span><span class="s0">;</span><span class="s1"> 
+                </span><span class="s0">break;</span><span class="s1"> 
+            } 
+            </span><span class="s0">catch </span><span class="s1">(IOException e) { 
+                System.out.println(</span><span class="s4">&quot;Neposlalo..&quot;</span><span class="s1">)</span><span class="s0">;</span><span class="s1"> 
+                </span><span class="s0">break;</span><span class="s1"> 
+            } 
+        } 
+        receivePaket()</span><span class="s0">;</span><span class="s1"> 
+    } 
+ 
+    </span><span class="s0">public void </span><span class="s1">receivePaket(){ 
+        </span><span class="s0">byte</span><span class="s1">[] receiveData = </span><span class="s0">new byte</span><span class="s1">[</span><span class="s2">100</span><span class="s1">]</span><span class="s0">;</span><span class="s1"> 
+        DatagramPacket receivePacket = </span><span class="s0">new </span><span class="s1">DatagramPacket(receiveData</span><span class="s0">, </span><span class="s1">receiveData.length)</span><span class="s0">;</span><span class="s1"> 
+        </span><span class="s0">try </span><span class="s1">{ 
+            </span><span class="s0">assert </span><span class="s1">clientSocket != </span><span class="s0">null;</span><span class="s1"> 
+            clientSocket.receive(receivePacket)</span><span class="s0">;</span><span class="s1"> 
+            clientSocket.setSoTimeout(</span><span class="s2">5000</span><span class="s1">)</span><span class="s0">;</span><span class="s1"> 
+        } 
+        </span><span class="s0">catch </span><span class="s1">(SocketTimeoutException e){ 
+            clientView.getArea().append(</span><span class="s4">&quot;CLIENT: Server is not answering.</span><span class="s0">\n</span><span class="s4">&quot;</span><span class="s1">)</span><span class="s0">;</span><span class="s1"> 
+            clientView.getArea().append(</span><span class="s4">&quot;CLIENT: Stopping pinging...</span><span class="s0">\n</span><span class="s4">&quot;</span><span class="s1">)</span><span class="s0">;</span><span class="s1"> 
+        } 
+        </span><span class="s0">catch </span><span class="s1">(IOException e) { 
+            e.printStackTrace()</span><span class="s0">;</span><span class="s1"> 
+        } 
+        String modifiedSentence = </span><span class="s0">new </span><span class="s1">String(receivePacket.getData())</span><span class="s0">;</span><span class="s1"> 
+        clientView.getArea().append(modifiedSentence)</span><span class="s0">;</span><span class="s1"> 
+    } 
+ 
+    </span><span class="s0">private static </span><span class="s1">ArrayList&lt;</span><span class="s0">byte</span><span class="s1">[]&gt; SplittedByte(</span><span class="s0">byte</span><span class="s1">[] byteToSplit</span><span class="s0">, int </span><span class="s1">length){  </span><span class="s3">//metoda kuskujuca string na rovnake kusky ktore lozi do arraylistu</span><span class="s1"> 
+        ArrayList&lt;</span><span class="s0">byte</span><span class="s1">[]&gt; subBytes = </span><span class="s0">new </span><span class="s1">ArrayList&lt;&gt;()</span><span class="s0">;</span><span class="s1"> 
+        </span><span class="s0">int </span><span class="s1">index = </span><span class="s2">0</span><span class="s0">;</span><span class="s1"> 
+ 
+        </span><span class="s0">while </span><span class="s1">(index &lt; byteToSplit.length) { 
+            subBytes.add(Arrays.copyOfRange(byteToSplit</span><span class="s0">,</span><span class="s1">index</span><span class="s0">, </span><span class="s1">index + length))</span><span class="s0">;</span><span class="s1"> 
+            index +=length</span><span class="s0">;</span><span class="s1"> 
+        } 
+        </span><span class="s0">return </span><span class="s1">subBytes</span><span class="s0">;</span><span class="s1"> 
+    } 
+    </span><span class="s3">//--------------------------------------------------------------------------------------------------------------</span><span class="s1"> 
+}</span></pre>
+</body>
+</html>

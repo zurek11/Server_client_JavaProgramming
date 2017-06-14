@@ -1,0 +1,136 @@
+<html>
+<head>
+<title>CLIENT.CLIENT.java</title>
+<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+<style type="text/css">
+.ln { color: #606366; font-weight: normal; font-style: normal; }
+.s0 { color: rgb(204,120,50); }
+.s1 { color: rgb(169,183,198); }
+.s2 { color: rgb(128,128,128); }
+.s3 { color: rgb(104,151,187); }
+.s4 { color: rgb(106,135,89); }
+</style>
+</head>
+<BODY BGCOLOR="#2b2b2b">
+<TABLE CELLSPACING=0 CELLPADDING=5 COLS=1 WIDTH="100%" BGCOLOR="#606060" >
+<TR><TD><CENTER>
+<FONT FACE="Arial, Helvetica" COLOR="#000000">
+CLIENT.CLIENT.java</FONT>
+</center></TD></TR></TABLE>
+<pre>
+<span class="s0">import </span><span class="s1">java.io.*</span><span class="s0">;</span><span class="s1"> 
+</span><span class="s0">import </span><span class="s1">java.net.*</span><span class="s0">;</span><span class="s1"> 
+</span><span class="s0">import </span><span class="s1">java.nio.ByteBuffer</span><span class="s0">;</span><span class="s1"> 
+</span><span class="s0">import </span><span class="s1">java.util.ArrayList</span><span class="s0">;</span><span class="s1"> 
+</span><span class="s0">import </span><span class="s1">java.util.List</span><span class="s0">;</span><span class="s1"> 
+</span><span class="s0">import </span><span class="s1">java.util.stream.Collectors</span><span class="s0">;</span><span class="s1"> 
+ 
+</span><span class="s0">class </span><span class="s1">CLIENT.CLIENT{
+    </span><span class="s0">public static void </span><span class="s1">main(String args[]) </span><span class="s0">throws </span><span class="s1">Exception{ 
+        </span><span class="s0">int </span><span class="s1">maxLengthOfPacket</span><span class="s0">;  </span><span class="s2">//premenna uchovavajuca maximalnu dlzku jednoho paketu v bytoch</span><span class="s1"> 
+        </span><span class="s0">int </span><span class="s1">numbOfMessage=</span><span class="s3">0</span><span class="s0">;    </span><span class="s2">//premenna uchovavajuca poradove cislo posielanej spravy</span><span class="s1"> 
+        BufferedReader inFromUser = </span><span class="s0">new </span><span class="s1">BufferedReader(</span><span class="s0">new </span><span class="s1">InputStreamReader(System.in))</span><span class="s0">;</span><span class="s1"> 
+        DatagramSocket clientSocket = </span><span class="s0">new </span><span class="s1">DatagramSocket()</span><span class="s0">;</span><span class="s1"> 
+ 
+ 
+        </span><span class="s2">//----USER-INPUT------------------------------------------------------------------------------------------------</span><span class="s1"> 
+ 
+        System.out.print(</span><span class="s4">&quot;Type server IP adress: &quot;</span><span class="s1">)</span><span class="s0">;</span><span class="s1"> 
+        String serverIP = inFromUser.readLine()</span><span class="s0">;</span><span class="s1"> 
+        InetAddress IPAddress = InetAddress.getByName(serverIP)</span><span class="s0">;</span><span class="s1"> 
+ 
+        System.out.print(</span><span class="s4">&quot;Type max length of packet: &quot;</span><span class="s1">)</span><span class="s0">;</span><span class="s1"> 
+        maxLengthOfPacket = Integer.parseInt(inFromUser.readLine())</span><span class="s0">;</span><span class="s1"> 
+ 
+        </span><span class="s0">while</span><span class="s1">(</span><span class="s0">true</span><span class="s1">){ 
+            ++numbOfMessage</span><span class="s0">;</span><span class="s1"> 
+            System.out.print(</span><span class="s4">&quot;Type your message to send: &quot;</span><span class="s1">)</span><span class="s0">;</span><span class="s1"> 
+            String stringToSend = inFromUser.readLine()</span><span class="s0">;</span><span class="s1"> 
+ 
+            </span><span class="s2">//--------------------------------------------------------------------------------------------------------------</span><span class="s1"> 
+ 
+            </span><span class="s0">if </span><span class="s1">(stringToSend.length() * </span><span class="s3">2 </span><span class="s1">&gt; maxLengthOfPacket) { 
+                ArrayList&lt;String&gt; subStringToSend</span><span class="s0">;      </span><span class="s2">//array podstringov v tvare bytov spravy</span><span class="s1"> 
+                ArrayList&lt;</span><span class="s0">byte</span><span class="s1">[]&gt; subByteToSend</span><span class="s0">;        </span><span class="s2">//array podstringov posielanej spravy</span><span class="s1"> 
+ 
+                subStringToSend = SplittedString(stringToSend</span><span class="s0">, </span><span class="s1">maxLengthOfPacket)</span><span class="s0">;  </span><span class="s2">//naplnenie arrayu podstringov spravy</span><span class="s1"> 
+                subByteToSend = StringArrToByteArr(subStringToSend)</span><span class="s0">;                </span><span class="s2">//naplnenie arrayu podstringov v tvare bytov spravy</span><span class="s1"> 
+ 
+                </span><span class="s0">byte</span><span class="s1">[] maxNumbOfPaket = ByteBuffer.allocate(</span><span class="s3">4</span><span class="s1">).putInt(subByteToSend.size()).array()</span><span class="s0">;    </span><span class="s2">//pole bytov uchovavajuce pocet posielanych paketov</span><span class="s1"> 
+                </span><span class="s0">byte</span><span class="s1">[] idOfMessage = ByteBuffer.allocate(</span><span class="s3">4</span><span class="s1">).putInt(numbOfMessage).array()</span><span class="s0">;  </span><span class="s2">//pole bytov uchovavajuce poradie posielanej spravy</span><span class="s1"> 
+ 
+                </span><span class="s2">//PRIPRAVA POSIELANIA</span><span class="s1"> 
+ 
+                </span><span class="s0">for </span><span class="s1">(</span><span class="s0">int </span><span class="s1">i = </span><span class="s3">0</span><span class="s0">; </span><span class="s1">i &lt; subByteToSend.size()</span><span class="s0">; </span><span class="s1">++i) { 
+                    </span><span class="s0">byte</span><span class="s1">[] numbOfPaket = ByteBuffer.allocate(</span><span class="s3">4</span><span class="s1">).putInt(i + </span><span class="s3">1</span><span class="s1">).array()</span><span class="s0">;  </span><span class="s2">//pole bytov uchovavajuce poradie aktualne posielaneho paketu</span><span class="s1"> 
+                    </span><span class="s0">byte</span><span class="s1">[] paketToSend = </span><span class="s0">new byte</span><span class="s1">[idOfMessage.length + numbOfPaket.length + maxNumbOfPaket.length + subByteToSend.get(i).length]</span><span class="s0">;    </span><span class="s2">//vytvorenie pola bytov ktoremu pridame hlavicku</span><span class="s1"> 
+                    System.arraycopy(idOfMessage</span><span class="s0">, </span><span class="s3">0</span><span class="s0">, </span><span class="s1">paketToSend</span><span class="s0">, </span><span class="s3">0</span><span class="s0">, </span><span class="s1">idOfMessage.length)</span><span class="s0">;       </span><span class="s2">//polu bytov pridame cast hlavicky s ID spravy</span><span class="s1"> 
+                    System.arraycopy(numbOfPaket</span><span class="s0">, </span><span class="s3">0</span><span class="s0">, </span><span class="s1">paketToSend</span><span class="s0">, </span><span class="s1">idOfMessage.length</span><span class="s0">, </span><span class="s1">numbOfPaket.length)</span><span class="s0">;  </span><span class="s2">//polu bytov pridame cast hlavicky s poradim posielaneho paketu</span><span class="s1"> 
+                    System.arraycopy(maxNumbOfPaket</span><span class="s0">, </span><span class="s3">0</span><span class="s0">, </span><span class="s1">paketToSend</span><span class="s0">, </span><span class="s1">idOfMessage.length+numbOfPaket.length</span><span class="s0">, </span><span class="s1">maxNumbOfPaket.length)</span><span class="s0">; </span><span class="s2">//polu bytov pridame cast hlavicky s poctom posielanych paketov</span><span class="s1"> 
+                    System.arraycopy(subByteToSend.get(i)</span><span class="s0">, </span><span class="s3">0</span><span class="s0">, </span><span class="s1">paketToSend</span><span class="s0">, </span><span class="s1">idOfMessage.length+numbOfPaket.length + maxNumbOfPaket.length</span><span class="s0">, </span><span class="s1">subByteToSend.get(i).length)</span><span class="s0">; </span><span class="s2">//polu bytov pridame samotne data</span><span class="s1"> 
+                    subByteToSend.set(i</span><span class="s0">, </span><span class="s1">paketToSend)</span><span class="s0">;  </span><span class="s2">//do arraylistu pridame modifikovany paket s hlavickou</span><span class="s1"> 
+                } 
+ 
+                </span><span class="s2">//POSIELANIE</span><span class="s1"> 
+ 
+                </span><span class="s0">for </span><span class="s1">(</span><span class="s0">byte</span><span class="s1">[] aSubByteToSend : subByteToSend) { 
+                    DatagramPacket sendPacket = </span><span class="s0">new </span><span class="s1">DatagramPacket(aSubByteToSend</span><span class="s0">, </span><span class="s1">aSubByteToSend.length</span><span class="s0">, </span><span class="s1">IPAddress</span><span class="s0">, </span><span class="s3">1111</span><span class="s1">)</span><span class="s0">;</span><span class="s1"> 
+                    clientSocket.send(sendPacket)</span><span class="s0">;</span><span class="s1"> 
+                } 
+                </span><span class="s0">if </span><span class="s1">(!receiveFromServer(clientSocket)) { </span><span class="s2">//ak sa serveru nepodarilo zachytit celu spravu klient sa ukonci</span><span class="s1"> 
+                    </span><span class="s0">break;</span><span class="s1"> 
+                } 
+            } 
+ 
+            </span><span class="s2">//--------------------------------------------------------------------------------------------------------------</span><span class="s1"> 
+ 
+            </span><span class="s0">else </span><span class="s1">{ 
+                </span><span class="s0">byte</span><span class="s1">[] byteToSend = stringToSend.getBytes()</span><span class="s0">;</span><span class="s1"> 
+                DatagramPacket sendPacket = </span><span class="s0">new </span><span class="s1">DatagramPacket(byteToSend</span><span class="s0">, </span><span class="s1">byteToSend.length</span><span class="s0">, </span><span class="s1">IPAddress</span><span class="s0">, </span><span class="s3">1111</span><span class="s1">)</span><span class="s0">; </span><span class="s2">//vytvori objekt typu UDP paket</span><span class="s1"> 
+                clientSocket.send(sendPacket)</span><span class="s0">;                                                              </span><span class="s2">//klient posle paket serveru</span><span class="s1"> 
+ 
+                </span><span class="s0">if </span><span class="s1">(!receiveFromServer(clientSocket)) { </span><span class="s2">//ak sa serveru nepodarilo zachytit celu spravu klient sa ukonci</span><span class="s1"> 
+                    </span><span class="s0">break;</span><span class="s1"> 
+                } 
+            } 
+        } 
+    } 
+ 
+    </span><span class="s2">//----METHODS-------------------------------------------------------------------------------------------------------</span><span class="s1"> 
+ 
+    </span><span class="s0">private static boolean </span><span class="s1">receiveFromServer(DatagramSocket clientSocket){  </span><span class="s2">//metoda ktora kontroluje poslanie spravy zo servera</span><span class="s1"> 
+        </span><span class="s0">byte</span><span class="s1">[] receiveData = </span><span class="s0">new byte</span><span class="s1">[</span><span class="s3">1024</span><span class="s1">]</span><span class="s0">;</span><span class="s1"> 
+ 
+        DatagramPacket receivePacket = </span><span class="s0">new </span><span class="s1">DatagramPacket(receiveData</span><span class="s0">, </span><span class="s1">receiveData.length)</span><span class="s0">;         </span><span class="s2">//vytvori objekt typu UDP paket</span><span class="s1"> 
+        </span><span class="s0">try </span><span class="s1">{ 
+            clientSocket.receive(receivePacket)</span><span class="s0">;                                                        </span><span class="s2">//klient dostane paket zo servera</span><span class="s1"> 
+            String modifiedSentence = </span><span class="s0">new </span><span class="s1">String(receivePacket.getData())</span><span class="s0">;                              </span><span class="s2">//pretypuje byte packet na string</span><span class="s1"> 
+            System.out.println(</span><span class="s4">&quot;FROM SERVER.SERVER:&quot; </span><span class="s1">+ modifiedSentence)</span><span class="s0">;                                      </span><span class="s2">//vypise pretypovany poslany paket</span><span class="s1">
+            </span><span class="s0">return true;</span><span class="s1"> 
+        } </span><span class="s0">catch </span><span class="s1">(IOException e) { 
+            e.printStackTrace()</span><span class="s0">;</span><span class="s1"> 
+            </span><span class="s0">return false;</span><span class="s1"> 
+        } 
+    } 
+ 
+    </span><span class="s0">private static </span><span class="s1">ArrayList&lt;String&gt; SplittedString(String stringToSplit</span><span class="s0">, int </span><span class="s1">length){  </span><span class="s2">//metoda kuskujuca string na rovnake kusky ktore lozi do arraylistu</span><span class="s1"> 
+        List&lt;String&gt; subStrings = </span><span class="s0">new </span><span class="s1">ArrayList&lt;&gt;()</span><span class="s0">;</span><span class="s1"> 
+        </span><span class="s0">int </span><span class="s1">index = </span><span class="s3">0</span><span class="s0">;</span><span class="s1"> 
+ 
+        </span><span class="s0">while </span><span class="s1">(index &lt; stringToSplit.length()) { 
+            subStrings.add(stringToSplit.substring(index</span><span class="s0">, </span><span class="s1">Math.min(index + length/</span><span class="s3">2</span><span class="s0">,</span><span class="s1">stringToSplit.length())))</span><span class="s0">;</span><span class="s1"> 
+            index +=length/</span><span class="s3">2</span><span class="s0">;</span><span class="s1"> 
+        } 
+        </span><span class="s0">return </span><span class="s1">(ArrayList&lt;String&gt;) subStrings</span><span class="s0">;</span><span class="s1"> 
+    } 
+ 
+    </span><span class="s0">private static </span><span class="s1">ArrayList&lt;</span><span class="s0">byte</span><span class="s1">[]&gt; StringArrToByteArr(ArrayList&lt;String&gt; subStrings){  </span><span class="s2">//metoda konvertujuca arraylist stringov na arraylist poli bytov</span><span class="s1"> 
+        List&lt;</span><span class="s0">byte</span><span class="s1">[]&gt; subByteToSend = </span><span class="s0">new </span><span class="s1">ArrayList&lt;&gt;()</span><span class="s0">;</span><span class="s1"> 
+ 
+        subByteToSend.addAll(subStrings.stream().map(String::getBytes).collect(Collectors.toList()))</span><span class="s0">;</span><span class="s1"> 
+        </span><span class="s0">return </span><span class="s1">(ArrayList&lt;</span><span class="s0">byte</span><span class="s1">[]&gt;) subByteToSend</span><span class="s0">;</span><span class="s1"> 
+    } 
+    </span><span class="s2">//--------------------------------------------------------------------------------------------------------------</span><span class="s1"> 
+}</span></pre>
+</body>
+</html>
